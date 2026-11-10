@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulado 2 — Engenharia de Software</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--ink:#182230;--muted:#667085;--line:#e4e7ec;--primary:#3157d5;--good:#16834a;--bad:#c43232;--soft:#eef2ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+header{background:linear-gradient(120deg,#172554,#3157d5);color:#fff;padding:32px 18px}
+.wrap{max-width:980px;margin:auto;padding:0 16px}h1{margin:0 0 6px;font-size:clamp(25px,4vw,36px)}header p{margin:0;color:#dbe5ff}
+.dashboard{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.stat,.progress-card,.question,.results{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 3px 12px #1018280a}
+.stat strong{display:block;font-size:25px}.stat span,.small{color:var(--muted);font-size:13px}
+.progress-card{margin-bottom:20px}.bar{height:12px;background:#e9edf5;border-radius:99px;overflow:hidden;margin:9px 0 4px}.bar>div{height:100%;width:0;background:var(--primary);transition:width .25s}
+.qhead{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.qhead h2{font-size:18px;margin:0}.tag{font-size:12px;color:#344054;background:#f2f4f7;border-radius:99px;padding:4px 9px;white-space:nowrap}
+.question{margin-bottom:14px}.statement{white-space:pre-line;margin:12px 0 14px}.options{display:grid;gap:9px}.option{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.15s}.option:hover{border-color:#9aaef7;background:#fafbff}.option input{margin-top:5px;accent-color:var(--primary)}.option:has(input:checked){border-color:var(--primary);background:var(--soft)}
+.actions{display:flex;gap:9px;align-items:center;margin-top:14px;flex-wrap:wrap}button{border:0;border-radius:9px;padding:10px 16px;font-weight:650;cursor:pointer;background:var(--primary);color:#fff}button:disabled{opacity:.5;cursor:not-allowed}.feedback{display:none;margin-top:13px;padding:12px;border-radius:10px}.feedback.correct{display:block;background:#eaf7ef;border:1px solid #b8e2c7;color:#14532d}.feedback.wrong{display:block;background:#fff0f0;border:1px solid #f1c2c2;color:#8f2020}.feedback b{display:block;margin-bottom:3px}
+.question.answered{border-left:4px solid var(--good)}.question.answered.incorrect{border-left-color:var(--bad)}
+.question-progress{margin:10px 0 12px;padding:9px 10px;background:#f8fafc;border-radius:9px}
+.question-progress-top{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.question-progress .bar{height:7px;margin:6px 0 0}
+.question-progress .bar>div{background:var(--good)}
+.question.answered.incorrect .question-progress .bar>div{background:var(--bad)}
+.question-map{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:14px}
+.question-map span{padding:8px 4px;text-align:center;border-radius:8px;background:#eef1f5;font-size:12px;font-weight:650}
+.question-map .map-correct{background:#eaf7ef;color:#14532d}
+.question-map .map-wrong{background:#fff0f0;color:#8f2020}
+.question-map .map-pending{background:#eef2ff;color:#3447a5}
+@media(max-width:420px){.question-map{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.results{margin:24px 0 40px}.results h2{margin-top:0}.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.result-grid div{background:#f8fafc;padding:12px;border-radius:10px}.result-grid strong{display:block;font-size:22px}
+.secondary{background:#344054}.hidden{display:none}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:0 0 30px}
+@media(max-width:620px){.dashboard{grid-template-columns:1fr 1fr}.result-grid{grid-template-columns:1fr 1fr}.stat:last-child{grid-column:span 2}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>Simulado 2 — Engenharia de Software</h1><p>30 questões • Responda e confira o comentário de cada questão.</p></div></header>
+<main class="wrap">
+<section class="dashboard">
+ <div class="stat"><strong id="answered">0/30</strong><span>Questões respondidas</span></div>
+ <div class="stat"><strong id="hits">0</strong><span>Acertos</span></div>
+ <div class="stat"><strong id="errors">0</strong><span>Erros</span></div>
+</section>
+<section class="progress-card"><b>Progresso do simulado</b><div class="bar"><div id="progress"></div></div><span class="small" id="progressText">0% concluído</span></section>
+<div id="quiz"></div>
+<section class="results" id="results">
+ <h2>Estatística final</h2><p class="small">O resultado é atualizado conforme você responde às questões.</p>
+ <div class="result-grid">
+  <div><strong id="finalTotal">0/30</strong><span class="small">Respondidas</span></div>
+  <div><strong id="finalHits">0</strong><span class="small">Acertos</span></div>
+  <div><strong id="finalErrors">0</strong><span class="small">Erros</span></div>
+  <div><strong id="finalRate">0%</strong><span class="small">Aproveitamento</span></div>
+ </div>
+ <div class="bar"><div id="scoreBar"></div></div>
+ <h3>Progresso por questão</h3><p class="small">Verde: acertou • Vermelho: errou • Cinza: ainda não respondeu.</p><div id="questionMap" class="question-map"></div>
+ <p id="finalMessage" class="small">Responda às questões para gerar seu resultado.</p>
+ <div class="actions"><button class="secondary" onclick="resetQuiz()">Refazer simulado</button><button onclick="window.print()">Imprimir resultado</button></div>
+</section>
+</main>
+<script>
+const questions = [
+{q:"Uma empresa de desenvolvimento utiliza um repositório Git compartilhado. Os programadores realizam alterações frequentes e precisam identificar rapidamente problemas de integração. Qual prática atende melhor a essa necessidade?",o:["Integração contínua com execução automatizada de verificações.","Integração exclusiva ao final de cada semestre.","Eliminação do controle de versões.","Publicação direta sem testes.","Substituição do repositório por arquivos locais."],a:0,e:"A integração contínua integra alterações frequentemente e executa verificações automatizadas, permitindo detectar problemas de integração mais cedo."},
+{q:"Uma equipe responsável pela qualidade de software deve realizar um teste de validação com usuários finais em seus ambientes reais de utilização, sem a presença constante dos desenvolvedores. Os problemas encontrados serão posteriormente comunicados à equipe técnica. O procedimento descrito caracteriza:",o:["Teste unitário.","Teste de integração.","Teste alfa.","Teste de regressão.","Teste beta."],a:4,e:"O teste beta é realizado por usuários em condições reais ou próximas do uso real. No teste alfa, a avaliação costuma ocorrer em ambiente controlado, próximo à equipe desenvolvedora."},
+{q:"Uma empresa desenvolve um sistema bancário cujos requisitos são conhecidos, estáveis e formalmente documentados. A instituição exige a conclusão de cada etapa antes do início da próxima. Qual modelo de desenvolvimento apresenta maior compatibilidade com esse cenário?",o:["Modelo evolucionário.","Modelo em Cascata.","Scrum.","Prototipação descartável.","Extreme Programming."],a:1,e:"O modelo em Cascata organiza o trabalho de forma predominantemente sequencial, sendo adequado quando os requisitos são estáveis e as etapas podem ser planejadas antecipadamente."},
+{q:"Considere as afirmativas sobre um plano de gerenciamento de configurações.\n\nI. Deve identificar os itens de configuração que serão controlados.\nII. Deve estabelecer procedimentos e responsabilidades para o controle de mudanças.\nIII. Deve definir ferramentas e procedimentos para registrar e acompanhar versões.\n\nÉ correto o que se afirma em:",o:["I, apenas.","II, apenas.","I e III, apenas.","I, II e III.","II e III, apenas."],a:3,e:"As três afirmativas estão corretas: o plano de GCS identifica os itens de configuração, define responsabilidades e procedimentos de mudança e estabelece ferramentas e práticas para controlar versões."},
+{q:"Uma organização desenvolve um sistema de atendimento ao público. Apesar de executar corretamente suas funcionalidades, os usuários enfrentam dificuldades para compreender mensagens e localizar informações. O atributo de qualidade mais diretamente comprometido é:",o:["Portabilidade.","Confiabilidade.","Usabilidade.","Interoperabilidade.","Eficiência energética."],a:2,e:"Usabilidade diz respeito à facilidade de aprender, compreender e utilizar o sistema. Dificuldades de navegação e compreensão da interface indicam deficiência nesse atributo."},
+{q:"Uma equipe utiliza Scrum em Sprints de um mês. O gerente solicita que sejam respeitados os limites máximos de duração da Daily Scrum e da Sprint Retrospective. Quais são esses limites, respectivamente?",o:["15 minutos e 3 horas.","30 minutos e 8 horas.","15 minutos e 8 horas.","1 hora e 4 horas.","5 minutos e 2 horas."],a:0,e:"A Daily Scrum tem duração máxima de 15 minutos. Para uma Sprint de um mês, a Sprint Retrospective tem duração máxima de 3 horas."},
+{q:"Uma empresa pretende medir a confiabilidade de um software utilizado em operações financeiras. Entre os indicadores disponíveis, qual está mais diretamente relacionado a esse atributo?",o:["Quantidade de telas.","Tamanho dos arquivos-fonte.","Quantidade de cores da interface.","Número de classes do projeto.","Frequência e severidade das falhas."],a:4,e:"A confiabilidade está relacionada à capacidade de operar corretamente ao longo do tempo. A frequência e a severidade das falhas são indicadores diretamente ligados a esse atributo."},
+{q:"Uma aplicação funciona corretamente no computador do desenvolvedor, mas apresenta problemas quando executada em outro ambiente devido a diferenças nas dependências instaladas. Qual prática contribui diretamente para reduzir esse problema?",o:["Eliminar a documentação técnica.","Utilizar imagens de contêineres com dependências definidas.","Executar os testes apenas em produção.","Impedir o versionamento do projeto.","Remover os ambientes de homologação."],a:1,e:"Imagens de contêineres com dependências definidas ajudam a reproduzir ambientes consistentes, reduzindo diferenças entre desenvolvimento, testes e produção."},
+{q:"A Engenharia de Software é frequentemente representada como uma tecnologia em camadas, composta por qualidade, processos, métodos e ferramentas. Qual elemento constitui a base dessa representação?",o:["Ferramentas.","Métodos.","Infraestrutura de hardware.","Foco na qualidade.","Linguagem de programação."],a:3,e:"A qualidade é a base que sustenta a tecnologia em camadas da Engenharia de Software; processo, métodos e ferramentas se apoiam nela."},
+{q:"Uma equipe de desenvolvimento utiliza um sistema de gerenciamento de versões. Considere as afirmativas.\n\nI. O versionamento permite acompanhar diferentes versões dos componentes.\nII. Sistemas de versionamento impedem obrigatoriamente que desenvolvedores trabalhem simultaneamente no mesmo componente.\nIII. Alguns sistemas utilizam mecanismos de armazenamento de diferenças entre versões para otimizar espaço.\n\nÉ correto o que se afirma em:",o:["II, apenas.","I e II, apenas.","I e III, apenas.","II e III, apenas.","I, II e III."],a:2,e:"I e III são verdadeiras. O controle de versão mantém o histórico e permite acompanhar versões; não impede obrigatoriamente o trabalho simultâneo, pois há mecanismos de ramificação e integração."},
+{q:"Uma empresa decidiu utilizar um pipeline para construir, testar e preparar automaticamente novas versões de seu software. A publicação em produção, entretanto, depende da autorização de um responsável. Essa prática corresponde predominantemente a:",o:["Entrega contínua.","Implantação contínua sem intervenção.","Ausência de automação.","Teste alfa.","Prototipação evolutiva."],a:0,e:"Na entrega contínua, o pipeline automatiza construção, testes e preparação do artefato, mas a implantação em produção pode depender de aprovação manual. Na implantação contínua, a publicação também é automatizada."},
+{q:"A respeito das métricas de qualidade de software, considere um programa com diversos caminhos de execução e estruturas condicionais. A métrica de complexidade ciclomática é utilizada principalmente para:",o:["Determinar a quantidade de usuários simultâneos.","Medir a velocidade da rede.","Calcular o custo de licenciamento.","Contar os caracteres da documentação.","Avaliar a complexidade do fluxo de controle e apoiar a definição de testes."],a:4,e:"A complexidade ciclomática mede a complexidade do fluxo de controle, estimando caminhos independentes e ajudando a planejar a cobertura de testes."},
+{q:"Uma empresa mantém um sistema de gestão hospitalar que sofre alterações frequentes. A direção exige que cada modificação seja identificada, analisada e rastreada. O principal objetivo do gerenciamento de configurações é:",o:["Impedir qualquer modificação após a implantação.","Garantir controle, rastreabilidade e integridade das mudanças.","Eliminar a necessidade de testes.","Reduzir obrigatoriamente o número de requisitos.","Substituir o planejamento do projeto."],a:1,e:"O gerenciamento de configurações controla itens e alterações, mantém rastreabilidade e preserva a integridade das versões e dos artefatos do sistema."},
+{q:"Uma equipe adota um modelo de desenvolvimento sequencial. As atividades são organizadas em análise de requisitos, projeto, implementação, testes, implantação e manutenção. Essa organização corresponde predominantemente ao:",o:["Scrum.","Kanban.","Modelo Espiral.","Modelo Cascata.","Desenvolvimento orientado a testes."],a:3,e:"O modelo Cascata organiza as fases em sequência, com conclusão de uma etapa antes do avanço para a seguinte."},
+{q:"Uma indústria utiliza sistemas computacionais para classificar produtos e controlar equipamentos robóticos de diferentes fabricantes. Após substituir um equipamento, a comunicação com o novo dispositivo permanece funcional. O atributo de qualidade diretamente evidenciado pela capacidade de comunicação entre sistemas diferentes é:",o:["Usabilidade.","Manutenibilidade.","Interoperabilidade.","Estética da interface.","Testabilidade."],a:2,e:"Interoperabilidade é a capacidade de sistemas ou componentes distintos trocarem informações e funcionarem em conjunto."},
+{q:"Um projeto utiliza GitHub Actions para executar automaticamente testes sempre que um desenvolvedor envia alterações ao repositório. Qual elemento de um workflow define os eventos responsáveis pelo acionamento da automação?",o:["on.","runs-on.","steps.","name.","permissions."],a:0,e:"No GitHub Actions, a chave on define os eventos que disparam o workflow, como push ou pull_request."},
+{q:"Uma equipe desenvolve um aplicativo utilizando Scrum. Durante a Sprint, os desenvolvedores identificam obstáculos que podem comprometer o Sprint Goal. Qual conduta está alinhada ao Scrum?",o:["Cancelar obrigatoriamente a Sprint diante de qualquer obstáculo.","Transferir toda a responsabilidade ao Product Owner.","Aguardar a retrospectiva para discutir os problemas.","Eliminar a Daily Scrum.","Inspecionar o progresso e adaptar o plano de trabalho para alcançar o objetivo da Sprint."],a:4,e:"O Scrum valoriza inspeção e adaptação. Os Developers acompanham o progresso e ajustam o plano de trabalho para alcançar o Sprint Goal."},
+{q:"Uma organização deseja avaliar a capacidade de manutenção de seu software. O sistema possui código altamente acoplado, funções extensas e documentação insuficiente. Qual iniciativa tende a melhorar sua manutenibilidade?",o:["Aumentar as dependências entre módulos.","Refatorar o código, melhorar a modularidade e manter documentação adequada.","Eliminar os testes automatizados.","Concentrar todas as funcionalidades em um único módulo.","Impedir alterações futuras."],a:1,e:"Refatoração, modularidade e documentação adequada tornam o código mais compreensível e facilitam correções e evoluções. Aumentar acoplamento ou concentrar tudo em um módulo piora a manutenção."},
+{q:"Uma equipe pretende automatizar a verificação de um sistema de cadastro de pacientes. O objetivo é identificar se alterações recentes comprometeram funcionalidades anteriormente aprovadas. Qual modalidade de teste atende diretamente a essa necessidade?",o:["Teste de instalação exclusivamente manual.","Teste de aceitação sem critérios.","Teste de carga apenas.","Teste de regressão.","Teste exploratório sem registro."],a:3,e:"O teste de regressão verifica se mudanças recentes introduziram defeitos em funcionalidades que já funcionavam corretamente."},
+{q:"Um sistema acadêmico foi desenvolvido com requisitos funcionais corretamente implementados. Entretanto, apresenta lentidão significativa quando centenas de estudantes acessam a plataforma simultaneamente. Qual atributo de qualidade está mais diretamente relacionado ao problema?",o:["Portabilidade.","Compatibilidade visual.","Eficiência de desempenho.","Rastreabilidade documental.","Facilidade de instalação."],a:2,e:"Eficiência de desempenho envolve tempo de resposta e comportamento do sistema sob determinada carga de trabalho."},
+{q:"Uma equipe utiliza controle de versão, controle de mudanças e integração contínua como práticas de apoio ao desenvolvimento. Qual alternativa relaciona corretamente essas práticas?",o:["O controle de versão acompanha versões; o controle de mudanças gerencia solicitações e alterações; a integração contínua verifica alterações integradas frequentemente.","O controle de versão substitui os testes; o controle de mudanças elimina os requisitos; a integração contínua identifica usuários.","O controle de versão publica automaticamente; o controle de mudanças impede alterações; a integração contínua substitui o Git.","As três práticas possuem exatamente a mesma finalidade.","A integração contínua ocorre exclusivamente após a implantação definitiva."],a:0,e:"As práticas são complementares: versionamento registra o histórico, controle de mudanças avalia e gerencia alterações, e integração contínua integra e verifica alterações frequentemente."},
+{q:"Uma equipe trabalha em um sistema de vendas utilizando Git. Dois desenvolvedores alteram a mesma região de um arquivo e, durante a integração, surge um conflito. Qual procedimento é mais adequado?",o:["Excluir permanentemente uma das branches.","Desativar o histórico do repositório.","Publicar ambas as versões sem verificação.","Remover o arquivo conflitante.","Analisar as alterações, resolver o conflito e validar o resultado antes de concluir a integração."],a:4,e:"É necessário comparar as mudanças, decidir como conciliá-las e validar o resultado. Publicar sem verificação pode introduzir defeitos ou perder alterações."},
+{q:"Uma empresa pretende adotar práticas DevOps para reduzir atrasos nas entregas. A direção acredita que a instalação de uma ferramenta de automação será suficiente para alcançar esse objetivo. Essa interpretação é inadequada porque:",o:["DevOps dispensa qualquer ferramenta tecnológica.","DevOps também envolve colaboração, cultura organizacional, automação e melhoria contínua.","DevOps é aplicável exclusivamente a projetos de pequeno porte.","DevOps proíbe o uso de métodos ágeis.","DevOps elimina a necessidade de profissionais de operações."],a:1,e:"DevOps não é apenas uma ferramenta. É uma abordagem que combina colaboração entre desenvolvimento e operações, cultura, automação e melhoria contínua."},
+{q:"Um sistema de atendimento médico recebe novas funcionalidades mensalmente. Para reduzir falhas, a equipe implementa testes unitários e de integração. A principal diferença entre essas modalidades é:",o:["Testes unitários são realizados somente pelos usuários finais.","Testes de integração avaliam exclusivamente a interface visual.","Testes unitários dispensam critérios de aceitação.","Testes unitários verificam componentes isolados, enquanto testes de integração avaliam suas interações.","Testes de integração substituem todas as demais verificações."],a:3,e:"Testes unitários verificam partes isoladas do código. Testes de integração verificam se componentes ou módulos funcionam corretamente em conjunto."},
+{q:"Uma empresa deseja adotar uma metodologia que permita visualizar tarefas, limitar o trabalho em progresso e identificar gargalos, sem exigir Sprints com duração fixa. Qual abordagem é mais adequada?",o:["Modelo Cascata.","Prototipação descartável.","Kanban.","Modelo em V.","Programação estruturada."],a:2,e:"Kanban utiliza visualização do fluxo de trabalho, limites de trabalho em progresso (WIP) e identificação de gargalos, sem exigir Sprints de duração fixa."},
+{q:"Uma organização pretende integrar práticas de segurança ao desenvolvimento e à operação de sistemas, incluindo verificações automatizadas de vulnerabilidades no pipeline. Essa abordagem é conhecida como:",o:["DevSecOps.","Programação extrema exclusivamente.","Teste beta.","Modelo Cascata.","Engenharia reversa."],a:0,e:"DevSecOps incorpora segurança ao ciclo de desenvolvimento e operação, incluindo verificações e controles automatizados no pipeline."},
+{q:"Uma equipe está preparando a implantação de uma aplicação. Durante a construção do pipeline, um desenvolvedor insere uma credencial de acesso diretamente no arquivo YAML versionado. Qual medida é mais adequada?",o:["Manter a credencial porque o repositório é privado.","Publicar a credencial na documentação.","Compartilhar a mesma credencial entre todos os projetos.","Desativar o histórico de commits sem alterar a credencial.","Revogar ou rotacionar a credencial exposta e utilizar gerenciamento seguro de segredos."],a:4,e:"Uma credencial versionada deve ser considerada comprometida. É necessário revogá-la ou rotacioná-la e armazenar segredos em mecanismos próprios, sem expô-los no código."},
+{q:"Um sistema de controle de estoque apresenta falhas após atualizações. A equipe deseja identificar a origem das alterações e restaurar uma versão anterior quando necessário. Qual prática contribui diretamente para essa necessidade?",o:["Excluir versões antigas para economizar espaço.","Manter histórico de commits, versões identificadas e procedimentos de reversão.","Impedir a criação de branches.","Eliminar registros de mudanças.","Realizar alterações diretamente em produção sem registro."],a:1,e:"Histórico de commits e versões identificadas permitem rastrear alterações. Procedimentos de reversão ajudam a recuperar uma versão anterior estável."},
+{q:"Uma empresa desenvolve um software de gestão escolar. A equipe precisa escolher entre modelos de desenvolvimento tradicionais e abordagens ágeis, considerando a possibilidade de alterações frequentes nos requisitos. Qual afirmação é correta?",o:["O Cascata elimina completamente os riscos de mudanças.","Métodos ágeis dispensam planejamento e documentação.","Todo projeto deve obrigatoriamente utilizar Scrum.","Abordagens iterativas e ágeis favorecem feedback frequente e adaptação a mudanças.","Modelos tradicionais impedem a realização de testes."],a:3,e:"Abordagens iterativas e ágeis trabalham com ciclos e feedback frequente, facilitando a adaptação quando os requisitos mudam. Isso não significa ausência de planejamento ou documentação."},
+{q:"Uma equipe desenvolve um sistema de teleatendimento. O projeto utiliza Git, testes automatizados, pipelines CI/CD e monitoramento em produção. Qual sequência representa adequadamente a integração dessas práticas?",o:["Publicar primeiro, registrar alterações depois e testar apenas quando surgirem reclamações.","Eliminar testes para aumentar a frequência das entregas.","Versionar alterações, executar verificações automatizadas, preparar o artefato, implantar conforme os critérios definidos e monitorar o sistema.","Substituir o controle de versão por documentação manual.","Realizar todas as verificações exclusivamente ao final do projeto."],a:2,e:"O fluxo adequado mantém o histórico no Git, executa verificações automatizadas, prepara o artefato, implanta segundo critérios definidos e monitora o comportamento em produção."}
+];
+
+const letters = ["A","B","C","D","E"];
+const state = {};
+const quiz = document.getElementById("quiz");
+questions.forEach((item,i)=>{
+ const card=document.createElement("article"); card.className="question"; card.id=`q${i}`;
+ const head=document.createElement("div");head.className="qhead";
+ head.innerHTML=`<h2>Questão ${i+1}</h2><span class="tag">0,1 ponto</span>`;
+ const statement=document.createElement("div");statement.className="statement";statement.textContent=item.q;
+ const options=document.createElement("div");options.className="options";
+ item.o.forEach((option,j)=>{
+  const label=document.createElement("label");label.className="option";
+  const input=document.createElement("input");input.type="radio";input.name=`q${i}`;input.value=j;
+  const text=document.createElement("span");text.textContent=`${letters[j]}. ${option}`;
+  label.append(input,text);options.append(label);
+ });
+ const actions=document.createElement("div");actions.className="actions";
+ const btn=document.createElement("button");btn.textContent="Responder";btn.onclick=()=>answer(i);
+ const status=document.createElement("span");status.className="small";status.id=`status${i}`;
+ actions.append(btn,status);
+ const qProgress=document.createElement("div");qProgress.className="question-progress";
+ qProgress.innerHTML=`<div class="question-progress-top"><span>Progresso geral do simulado</span><b class="qPct">0/30 respondidas — 0%</b></div><div class="bar"><div class="qBar"></div></div>`;
+ const feedback=document.createElement("div");feedback.className="feedback";feedback.id=`feedback${i}`;
+ card.append(head,statement,qProgress,options,actions,feedback);quiz.append(card);
+});
+function answer(i){
+ if(state[i]!==undefined)return;
+ const selected=document.querySelector(`input[name="q${i}"]:checked`);
+ if(!selected){document.getElementById(`status${i}`).textContent="Selecione uma alternativa.";return;}
+ const choice=Number(selected.value), item=questions[i], correct=choice===item.a;
+ state[i]=correct;
+ const card=document.getElementById(`q${i}`), feedback=document.getElementById(`feedback${i}`);
+ card.classList.add("answered");if(!correct)card.classList.add("incorrect");
+ card.querySelectorAll("input").forEach(input=>input.disabled=true);
+ card.querySelector("button").disabled=true;
+ feedback.className=`feedback ${correct?"correct":"wrong"}`;
+ feedback.innerHTML=correct?`<b>✓ Resposta correta!</b>Alternativa ${letters[item.a]}.`:`<b>✗ Resposta incorreta.</b>Você marcou ${letters[choice]}. A resposta correta é ${letters[item.a]}.<br><br><b>Explicação:</b> ${item.e}`;
+ document.getElementById(`status${i}`).textContent=correct?"Acertou":"Errou";
+ updateStats();
+}
+function updateStats(){
+ const done=Object.keys(state).length,hits=Object.values(state).filter(Boolean).length,errors=done-hits;
+ const pct=Math.round(done/questions.length*100),score=done?Math.round(hits/done*100):0;
+ document.getElementById("answered").textContent=`${done}/${questions.length}`;
+ document.getElementById("hits").textContent=hits;document.getElementById("errors").textContent=errors;
+ document.getElementById("progress").style.width=pct+"%";document.getElementById("progressText").textContent=`${pct}% concluído`;
+ document.getElementById("finalTotal").textContent=`${done}/${questions.length}`;
+ document.getElementById("finalHits").textContent=hits;document.getElementById("finalErrors").textContent=errors;
+ document.getElementById("finalRate").textContent=score+"%";document.getElementById("scoreBar").style.width=score+"%";
+ const map=document.getElementById("questionMap");
+ map.innerHTML="";
+ document.querySelectorAll(".question-progress").forEach(progress=>{
+  progress.querySelector(".qBar").style.width=pct+"%";
+  progress.querySelector(".qPct").textContent=`${done}/${questions.length} respondidas — ${pct}%`;
+ });
+ questions.forEach((_,i)=>{
+  const cell=document.createElement("span");
+  cell.textContent=`Q${i+1}`;
+  if(state[i]===true)cell.className="map-correct";
+  else if(state[i]===false)cell.className="map-wrong";
+  else cell.className="map-pending";
+  cell.title=state[i]===true?"Respondida corretamente":state[i]===false?"Respondida incorretamente":"Não respondida";
+  map.append(cell);
+ });
+ document.getElementById("finalMessage").textContent=done===questions.length?`Simulado concluído! Aproveitamento final: ${score}%.`:`Você respondeu ${done} de ${questions.length} questões. O aproveitamento considera apenas as questões já respondidas.`;
+}
+function resetQuiz(){if(!confirm("Deseja apagar suas respostas e reiniciar o simulado?"))return;location.reload();}
+updateStats();
+</script>
+</body>
+</html>
